@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { colorName, colorToCss } from '@/lib/colors';
 
 // 🔑 كلمة المرور والبريد الافتراضيان
 const DEFAULT_PASSCODE = "Wafaa@Admin2026!";
@@ -74,7 +75,7 @@ export const OwnerAdminModal = () => {
   const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
   const [customSizeInput, setCustomSizeInput] = useState('');
   const [selectedColors, setSelectedColors] = useState<string[]>([]);
-  const [customColorPicker, setCustomColorPicker] = useState('#8B4513');
+  const [customColorName, setCustomColorName] = useState('');
   const [itemReturnPolicy, setItemReturnPolicy] = useState('قابل للإرجاع خلال 14 يوماً من الاستلام');
   const [inStock, setInStock] = useState(true);
   const [productSuccessMsg, setProductSuccessMsg] = useState('');
@@ -204,8 +205,10 @@ export const OwnerAdminModal = () => {
   };
 
   const handleAddColor = () => {
-    if (!selectedColors.includes(customColorPicker)) {
-      setSelectedColors([...selectedColors, customColorPicker]);
+    const name = customColorName.trim();
+    if (name && !selectedColors.includes(name)) {
+      setSelectedColors([...selectedColors, name]);
+      setCustomColorName('');
     }
   };
 
@@ -647,25 +650,27 @@ export const OwnerAdminModal = () => {
                             <label className="block text-xs font-semibold text-[#c5a880] mb-2">ألوان المنتج المتاحة:</label>
                             <div className="flex items-center gap-3 mb-3">
                               <input
-                                type="color"
-                                value={customColorPicker}
-                                onChange={(e) => setCustomColorPicker(e.target.value)}
-                                className="w-10 h-10 rounded-xl cursor-pointer bg-[#1e130a] border border-[#5c3a21] p-1"
+                                type="text"
+                                value={customColorName}
+                                onChange={(e) => setCustomColorName(e.target.value)}
+                                placeholder="مثال: أحمر، نيلي، بيج أو أي اسم مخصص"
+                                className="flex-1 rounded-xl bg-[#1e130a] border border-[#5c3a21] text-[#e6ccb2] px-3 py-2 text-xs"
+                                dir="rtl"
                               />
                               <button
                                 type="button"
                                 onClick={handleAddColor}
                                 className="bg-[#3d2716] border border-[#5c3a21] text-[#e6ccb2] px-4 py-2 rounded-xl text-xs font-bold"
                               >
-                                إضافة هذا اللون 🎨
+                                إضافة اسم اللون 🎨
                               </button>
                             </div>
                             {selectedColors.length > 0 && (
                               <div className="flex flex-wrap gap-2 p-3 bg-[#1e130a] rounded-xl border border-[#3d2716]">
                                 {selectedColors.map((color, idx) => (
                                   <div key={idx} className="flex items-center gap-1.5 bg-[#2a1a0e] border border-[#5c3a21] px-3 py-1 rounded-full text-xs">
-                                    <span className="w-4 h-4 rounded-full border border-[#a68a64]" style={{ backgroundColor: color }}></span>
-                                    <span>{color}</span>
+                                    <span className="w-4 h-4 rounded-full border border-[#a68a64]" style={{ backgroundColor: colorToCss(color) }}></span>
+                                    <span>{colorName(color)}</span>
                                     <button type="button" onClick={() => setSelectedColors(selectedColors.filter(c => c !== color))} className="text-red-400 font-bold ml-1">✕</button>
                                   </div>
                                 ))}
@@ -781,7 +786,7 @@ export const OwnerAdminModal = () => {
                                 <span className="text-xs text-[#c5a880] block mb-1.5 font-semibold">الألوان المتاحة:</span>
                                 <div className="flex gap-2">
                                   {selectedColors.map((c, idx) => (
-                                    <span key={idx} className="w-5 h-5 rounded-full border border-[#a68a64] shadow-sm" style={{ backgroundColor: c }}></span>
+                                    <span key={idx} className="w-5 h-5 rounded-full border border-[#a68a64] shadow-sm" style={{ backgroundColor: colorToCss(c) }} title={colorName(c)}></span>
                                   ))}
                                 </div>
                               </div>

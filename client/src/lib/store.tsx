@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useState, type ReactNode } from "
 import { defaultMedia, defaultProducts, defaultSettings } from "@/data/catalog";
 import type { InboundMessage, MessageStatus, Order, OrderStatus, Product, Review, StoreMedia, StoreSettings } from "@/lib/types";
 import { deleteRemoteReview, loadRemoteMessages, loadRemoteOrders, loadRemoteReviews, syncMessage, syncOrder, syncReview } from "@/lib/integrations";
+import { colorName } from "@/lib/colors";
 
 const PRODUCTS_KEY = "wafaa_products_v1";
 const SETTINGS_KEY = "wafaa_settings_v1";
@@ -14,7 +15,11 @@ function readLocal<T>(key: string, fallback: T): T {
   if (typeof window === "undefined") return fallback;
   try { const raw = window.localStorage.getItem(key); return raw ? JSON.parse(raw) as T : fallback; } catch { return fallback; }
 }
-function loadProducts() { const value = readLocal<Product[]>(PRODUCTS_KEY, defaultProducts); return Array.isArray(value) && value.length ? value : defaultProducts; }
+function loadProducts() {
+  const value = readLocal<Product[]>(PRODUCTS_KEY, defaultProducts);
+  if (!Array.isArray(value) || !value.length) return defaultProducts;
+  return value.map((product) => ({ ...product, colors: product.colors.map(colorName) }));
+}
 function loadSettings() { return { ...defaultSettings, ...readLocal<Partial<StoreSettings>>(SETTINGS_KEY, {}) }; }
 function loadMedia() { return { ...defaultMedia, ...readLocal<Partial<StoreMedia>>(MEDIA_KEY, {}) }; }
 function loadOrders() { return readLocal<Order[]>(ORDERS_KEY, []); }

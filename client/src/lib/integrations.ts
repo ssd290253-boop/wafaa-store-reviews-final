@@ -1,6 +1,7 @@
 import emailjs from "@emailjs/browser";
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import type { InboundMessage, Order, Review } from "@/lib/types";
+import { colorName } from "@/lib/colors";
 
 const env = import.meta.env as Record<string, string | undefined>;
 const configuredWhatsApp = env.VITE_WHATSAPP_NUMBER || "201026674042";
@@ -26,7 +27,7 @@ export function openWhatsApp(message: string) {
 }
 
 export function orderWhatsAppMessage(order: Order) {
-  const lines = order.items.map((item) => `- ${item.name} | مقاس: ${item.size} | لون: ${item.color} | الكمية: ${item.quantity} | ${item.price * item.quantity} ج.م`);
+  const lines = order.items.map((item) => `- ${item.name} | مقاس: ${item.size} | اللون: ${colorName(item.color)} | الكمية: ${item.quantity} | ${item.price * item.quantity} ج.م`);
   return [`مرحباً وفاء، أريد تأكيد هذا الطلب:`, `رقم الطلب: ${order.id}`, `الاسم: ${order.customerName}`, `الهاتف: ${order.phone}`, `العنوان: ${order.address}`, "", "المنتجات:", ...lines, "", `المجموع: ${order.subtotal} ج.م`, `الشحن: ${order.shipping === 0 ? "مجاني" : `${order.shipping} ج.م`}`, `الإجمالي: ${order.total} ج.م`].join("\n");
 }
 

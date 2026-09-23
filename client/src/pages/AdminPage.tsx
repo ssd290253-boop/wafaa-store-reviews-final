@@ -6,6 +6,7 @@ import { generateProductId, useStore } from "@/lib/store";
 import { resizeImageToDataUrl } from "@/lib/image";
 import { formatPrice } from "@/lib/utils";
 import type { CategoryId, OrderStatus, Product, Review, StoreSettings } from "@/lib/types";
+import { colorName } from "@/lib/colors";
 import { AdminMediaManager } from "./AdminMediaManager";
 
 const ADMIN_PASSWORD_KEY = "wafaa_admin_password_v1";
@@ -242,12 +243,12 @@ function ProductForm({
   const submit = (event: FormEvent) => {
     event.preventDefault();
     const sizeList = sizes.split(/[,،]/).map((item) => item.trim()).filter(Boolean);
-    const colorList = colors.split(",").map((item) => item.trim()).filter(Boolean);
+    const colorList = colors.split(/[,،]/).map((item) => item.trim()).filter(Boolean);
 
     if (!name.trim()) { setError("يرجى كتابة اسم المنتج"); return; }
     if (!price || Number(price) <= 0) { setError("يرجى إدخال سعر صحيح"); return; }
     if (!sizeList.length) { setError("أضيفي مقاساً واحداً على الأقل، مفصولة بفاصلة"); return; }
-    if (!colorList.length) { setError("أضيفي لوناً واحداً على الأقل (كود hex)، مفصولة بفاصلة"); return; }
+    if (!colorList.length) { setError("أضيفي اسماً واحداً للون على الأقل، وافصلي بين الألوان بفاصلة"); return; }
 
     setError("");
     onSubmit({
@@ -284,7 +285,7 @@ function ProductForm({
         <label>التقييم (0–5)<input type="number" min="0" max="5" step="0.1" value={rating} onChange={(e) => setRating(e.target.value)} /></label>
         <label>عدد المراجعات<input type="number" min="0" step="1" value={reviews} onChange={(e) => setReviews(e.target.value)} /></label>
         <label className="admin-span-2">المقاسات (افصلي بفاصلة)<input required value={sizes} onChange={(e) => setSizes(e.target.value)} placeholder="S, M, L, XL" /></label>
-        <label className="admin-span-2">الألوان — أكواد hex (افصلي بفاصلة)<input required value={colors} onChange={(e) => setColors(e.target.value)} placeholder="#e8ddd0, #20201d" /></label>
+        <label className="admin-span-2">ألوان المنتج — أسماء حرة (افصلي بفاصلة)<input required value={colors} onChange={(e) => setColors(e.target.value)} placeholder="أحمر، Navy Blue، Mint Green، لون مخصص" /><small className="admin-hint">اكتبي أي اسم واضح للون. ستظهر الأسماء للعميل، وتُستخدم معاينة ذكية للأسماء القياسية أو لون افتراضي جميل للأسماء المخصصة.</small></label>
         <label className="admin-span-2">وصف المنتج<textarea rows={3} value={description} onChange={(e) => setDescription(e.target.value)} /></label>
         <label className="admin-span-2 admin-checkbox"><input type="checkbox" checked={isNew} onChange={(e) => setIsNew(e.target.checked)} /> منتج جديد (يظهر عليه شارة "جديد")</label>
         <div className="admin-span-2 admin-image-field">
@@ -407,7 +408,7 @@ function AdminOrders() {
       <div className="admin-section-head"><div><p>تابعي الطلبات والمبيعات من مكان واحد.</p><span className="admin-hint">تظهر الطلبات من جميع الأجهزة عند إضافة بيانات Supabase، وتبقى محلياً داخل هذا المتصفح إذا لم يتم تفعيلها.</span></div><button type="button" className="outline-button" onClick={() => { if (window.confirm("حذف سجل الطلبات بالكامل؟")) resetOrders(); }}>مسح السجل</button></div>
       <div className="orders-stats"><div><span>إجمالي المبيعات</span><strong>{formatPrice(revenue)} ج.م</strong></div><div><span>كل الطلبات</span><strong>{orders.length}</strong></div><div><span>طلبات جديدة</span><strong>{pending}</strong></div><div><span>طلبات مكتملة</span><strong>{completed}</strong></div></div>
       <div className="order-filter-bar" role="group" aria-label="تصفية الطلبات">{Object.entries(filterLabels).map(([value, label]) => <button key={value} type="button" className={filter === value ? "active" : ""} onClick={() => setFilter(value as typeof filter)}>{label}<span>{value === "all" ? orders.length : value === "pending" ? pending : value === "completed" ? completed : orders.filter((order) => order.status === "confirmed" || order.status === "shipped").length}</span></button>)}</div>
-      {orders.length === 0 ? <div className="orders-empty"><Check size={25} /><h2>لا توجد طلبات بعد</h2><p>عند إتمام أول طلب سيظهر هنا مع تفاصيل العميل والمنتجات والحالة.</p></div> : visibleOrders.length === 0 ? <div className="orders-empty"><Check size={25} /><h2>لا توجد طلبات بهذه الحالة</h2><p>جرّبي اختيار تصنيف آخر لمتابعة المبيعات.</p></div> : <div className="orders-list">{visibleOrders.map((order) => <article className="order-card" key={order.id}><div className="order-card-head"><div><strong>طلب #{order.id.slice(-6).toUpperCase()}</strong><span>{new Date(order.createdAt).toLocaleString("ar-EG")}</span></div><strong className="order-total">{formatPrice(order.total)} ج.م</strong></div><div className="order-customer"><strong>{order.customerName}</strong><span>{order.phone || "بدون رقم"}</span><span>{order.address || "العنوان غير مضاف"}</span></div><div className="order-items">{order.items.map((item) => <span key={`${order.id}-${item.id}-${item.size}-${item.color}`}>{item.name} × {item.quantity}</span>)}</div><div className="order-card-actions"><select value={order.status} onChange={(event) => updateOrderStatus(order.id, event.target.value as OrderStatus)} aria-label="حالة الطلب">{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><button type="button" className="admin-danger-button" onClick={() => { if (window.confirm("حذف هذا الطلب؟")) deleteOrder(order.id); }}><Trash2 size={14} /> حذف</button></div></article>)}</div>}
+      {orders.length === 0 ? <div className="orders-empty"><Check size={25} /><h2>لا توجد طلبات بعد</h2><p>عند إتمام أول طلب سيظهر هنا مع تفاصيل العميل والمنتجات والحالة.</p></div> : visibleOrders.length === 0 ? <div className="orders-empty"><Check size={25} /><h2>لا توجد طلبات بهذه الحالة</h2><p>جرّبي اختيار تصنيف آخر لمتابعة المبيعات.</p></div> : <div className="orders-list">{visibleOrders.map((order) => <article className="order-card" key={order.id}><div className="order-card-head"><div><strong>طلب #{order.id.slice(-6).toUpperCase()}</strong><span>{new Date(order.createdAt).toLocaleString("ar-EG")}</span></div><strong className="order-total">{formatPrice(order.total)} ج.م</strong></div><div className="order-customer"><strong>{order.customerName}</strong><span>{order.phone || "بدون رقم"}</span><span>{order.address || "العنوان غير مضاف"}</span></div><div className="order-items">{order.items.map((item) => <span key={`${order.id}-${item.id}-${item.size}-${item.color}`}>{item.name} · اللون: {colorName(item.color)} × {item.quantity}</span>)}</div><div className="order-card-actions"><select value={order.status} onChange={(event) => updateOrderStatus(order.id, event.target.value as OrderStatus)} aria-label="حالة الطلب">{Object.entries(statusLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}</select><button type="button" className="admin-danger-button" onClick={() => { if (window.confirm("حذف هذا الطلب؟")) deleteOrder(order.id); }}><Trash2 size={14} /> حذف</button></div></article>)}</div>}
     </section>
   );
 }
